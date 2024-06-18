@@ -208,6 +208,7 @@ func (b *nodebuffer) setSize(size int, db ethdb.KeyValueStore, clean *fastcache.
 // memory threshold is reached. Note, all data must be written atomically.
 func (b *nodebuffer) flush(db ethdb.KeyValueStore, clean *fastcache.Cache, id uint64, force bool) error {
 	if b.size <= b.limit && !force {
+		log.Debug("early return", "size", b.size, "limit", b.limit)
 		return nil
 	}
 	// Ensure the target state id is aligned with the internal counter.

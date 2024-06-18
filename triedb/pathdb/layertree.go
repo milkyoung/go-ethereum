@@ -19,6 +19,7 @@ package pathdb
 import (
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/log"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -112,6 +113,7 @@ func (tree *layerTree) add(root common.Hash, parentRoot common.Hash, block uint6
 // cap traverses downwards the diff tree until the number of allowed diff layers
 // are crossed. All diffs beyond the permitted number are flattened downwards.
 func (tree *layerTree) cap(root common.Hash, layers int) error {
+	log.Debug("ready to cap", "root", root)
 	// Retrieve the head layer to cap from
 	root = types.TrieRootHash(root)
 	l := tree.get(root)
@@ -142,6 +144,7 @@ func (tree *layerTree) cap(root common.Hash, layers int) error {
 			diff = parent
 		} else {
 			// Diff stack too shallow, return without modifications
+			log.Debug("Diff stack too shallow", "root", root, "i", i)
 			return nil
 		}
 	}
@@ -149,11 +152,13 @@ func (tree *layerTree) cap(root common.Hash, layers int) error {
 	// the memory limit is not yet exceeded.
 	switch parent := diff.parentLayer().(type) {
 	case *diskLayer:
+		log.Debug("meet diskLayer", "root", root)
 		return nil
 
 	case *diffLayer:
 		// Hold the lock to prevent any read operations until the new
 		// parent is linked correctly.
+		log.Debug("meet diffLayer", "root", root, "number", parent.block)
 		diff.lock.Lock()
 
 		base, err := parent.persist(false)
